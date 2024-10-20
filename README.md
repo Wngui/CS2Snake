@@ -17,4 +17,7 @@
   <img src="https://github.com/user-attachments/assets/95da97ab-c246-452e-b8a7-33c622ddbc10" alt="Gameplay GIF"/>
 </div>
 
-Use command !snake to fire up a game
+---
+
+## Commands
+```!snake``` - Start the game
