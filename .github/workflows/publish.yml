@@ -1,4 +1,4 @@
-name: Deploy Warcraft plugin
+name: Release plugin
 on: 
   workflow_dispatch:
   push:
