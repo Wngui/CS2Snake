@@ -8,7 +8,7 @@
 
 <br>
 <p align="center">
-  Why not play a game of Snake in CS2 while you wait for your teammates to clutch the round? It’s a fun way to pass the time and sharpen your skills!
+  Why not play a game of Snake in CS2 while you wait for your teammates to clutch the round?
 </p>
 
 ---
