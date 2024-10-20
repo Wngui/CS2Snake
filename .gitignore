@@ -396,4 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-PostBuild.targets
+WarcraftPlugin/PostBuild.targets

@@ -1,0 +1,55 @@
+name: Deploy Warcraft plugin
+on: 
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Generate build number
+      id: buildnumber
+      uses: onyxmueller/build-tag-number@v1
+      with:
+        token: ${{ secrets.github_token }}
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.x.x' # Use the version of .NET you need
+
+    - name: Publish build artifacts
+      run: dotnet publish CS2Snake/CS2Snake.csproj --configuration Release --output ./publish/CS2Snake
+      
+    - name: Create zip of publish directory contents
+      run: |
+        cd publish
+        zip -r ../cs2Snake-plugin.zip * # Zip the contents of the publish folder
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ steps.buildnumber.outputs.build_number }}
+        release_name: Release ${{ steps.buildnumber.outputs.build_number }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./cs2Snake-plugin.zip
+        asset_name: cs2Snake-plugin-${{ steps.buildnumber.outputs.build_number }}.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

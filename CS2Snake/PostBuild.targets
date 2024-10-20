@@ -1,0 +1,6 @@
+<!-- PostBuild.targets -->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug'">
+    <Exec Command="xcopy &quot;C:\Users\LHRBO\source\repos\CS2Snake\CS2Snake\bin\Debug\net8.0\*&quot; &quot;C:\cs2-server\cs2-ds\game\csgo\addons\counterstrikesharp\plugins\CS2Snake\&quot; /Y /E" />
+  </Target>
+</Project>
