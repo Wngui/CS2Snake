@@ -8,6 +8,9 @@ namespace CS2Snake
 {
     public class Snake : BasePlugin
     {
+        private Database _database;
+        private SnakeGame _snakeGame;
+
         public override string ModuleName => "Snake";
         public override string ModuleVersion => "1.0.0";
         public override string ModuleAuthor => "BoinK";
@@ -18,20 +21,18 @@ namespace CS2Snake
         public override void Load(bool hotReload)
         {
             Instance ??= this;
-            Controller.Load(this, hotReload);
 
-            //Debug
-            foreach (var player in Utilities.GetPlayers())
-            {
-                player.ExecuteClientCommandFromServer("css_snake");
-            }
+            _database = new Database();
+            _database.Initialize(ModuleDirectory);
+
+           _snakeGame = new SnakeGame();
+            _snakeGame.Load(this, hotReload, _database);
         }
 
         [ConsoleCommand("css_snake")]
         public void SnakeCommand(CCSPlayerController? player, CommandInfo? info)
         {
-            var menu = SnakeManager.StartNewGame("Snake");
-            SnakeManager.OpenMainMenu(player, menu);
+            SnakeGame.Start(player);
         }
     }
 }

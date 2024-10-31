@@ -3,18 +3,19 @@ using CounterStrikeSharp.API.Core;
 
 namespace CS2Snake.Menu;
 
-public static class Controller
+public class SnakeGame
 {
 
-    public static readonly Dictionary<int, Game> Players = [];
+    public static readonly Dictionary<int, GameState> Players = [];
 
-    public static void Load(BasePlugin plugin, bool hotReload)
+    public void Load(BasePlugin plugin, bool hotReload, Database database)
     {
         plugin.RegisterEventHandler<EventPlayerActivate>((@event, info) =>
         {
             if (@event.Userid != null)
-                Players[@event.Userid.Slot] = new Game
+                Players[@event.Userid.Slot] = new GameState
                 {
+                    Database = database,
                     _player = @event.Userid,
                     Buttons = 0
                 };
@@ -32,8 +33,9 @@ public static class Controller
         if (hotReload)
             foreach (var pl in Utilities.GetPlayers())
             {
-                Players[pl.Slot] = new Game
+                Players[pl.Slot] = new GameState
                 {
+                    Database = database,
                     _player = pl,
                     Buttons = pl.Buttons
                 };
@@ -48,7 +50,7 @@ public static class Controller
         DateTime now = DateTime.Now;
         TimeSpan delta = now - lastUpdate;
 
-        foreach (var game in Players.Values.Where(p => p.CenterHtml != null))
+        foreach (var game in Players.Values.Where(p => p.GameRunning))
         {
             // Render the updated HTML to the player's screen if not empty
             if (!string.IsNullOrEmpty(game.CenterHtml))
@@ -75,8 +77,12 @@ public static class Controller
             {
                 game.Right();
             }
+            else if ((game.Buttons & PlayerButtons.Reload) == 0 && (game._player.Buttons & PlayerButtons.Reload) != 0)
+            {
+                game.Retry();
+            }
 
-            // Check if menu should be opened
+            // Check if menu should be closed
             if (((long)game._player.Buttons & 8589934592) == 8589934592)
             {
                 game.CloseGame();
@@ -95,5 +101,11 @@ public static class Controller
                 game.Buttons = game._player.Buttons;
             }
         }
+    }
+
+    public static void Start(CCSPlayerController? player)
+    {
+        if (player == null) return;
+        Players[player.Slot].StartGame();
     }
 }
