@@ -24,16 +24,16 @@ namespace CS2Snake
 
             var placeholderHighscores = new List<(ulong SteamId, string Name, int Score)>
             {
-                (1, "NoobMaster69", 600),   // Moved to first place
-                (7, "ThePizzaPope", 550),
-                (9, "007", 500),
-                (4, "HeadshotHunter", 450),
-                (2, "PotatoAimPro", 400),
-                (8, "BananaBlaster", 375),
-                (3, "CampingIsLife", 350),
-                (5, "LaggingLegend", 300),
-                (6, "BaconBandit", 250),
-                (10, "EpicFailGuy", 225)
+                (1, "NoobMaster69", 400),
+                (7, "ThePizzaPope", 300),
+                (4, "HeadshotHunter", 150),
+                (2, "PotatoAimPro", 120),
+                (8, "BananaBlaster", 100),
+                (3, "CampingIsLife", 75),
+                (5, "LaggingLegend", 50),
+                (6, "BaconBandit", 25),
+                (9, "007", 7),
+                (10, "EpicFailGuy", 0)
             };
 
             foreach (var (steamId, name, score) in placeholderHighscores)
@@ -58,7 +58,7 @@ namespace CS2Snake
             INSERT INTO `highscores` (steamid, score, name)
             VALUES (@SteamId, @Score, @Name)
             ON CONFLICT(steamid) DO UPDATE SET score = @Score, name = @Name
-            WHERE excluded.score < score;",
+            WHERE excluded.score > score;",
                 new { highscore.SteamId, highscore.Score, highscore.Name });
         }
     }

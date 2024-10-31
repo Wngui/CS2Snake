@@ -24,9 +24,10 @@ public class GameState
     private readonly int gridWidth = 19;
     private readonly int gridHeight = 6;
     private Random random;
-    private bool gameOver;
-    private int _score; // Added variable to track the score
+    private bool gameOver = false;
     private bool showingGameOver = false;
+    private int _score;
+
 
     public GameState()
     {
@@ -51,8 +52,8 @@ public class GameState
         direction = (-1, 0); // Start moving left
         food = GenerateFoodPosition();
         gameOver = false;
-        _score = 0; // Reset score
         showingGameOver = false;
+        _score = 0; // Reset score
     }
 
 
@@ -181,37 +182,60 @@ public class GameState
 
     private void AppendHighscores(StringBuilder builder)
     {
-        // Define maximum name length
-        const int maxNameLength = 15;
+        // Define maximum name length for alignment purposes
+        const int maxNameLength = 13;
 
         // List high scores
         var highScores = Database.GetHighScores();
 
-        // Display two high scores per line
+        int rank = 1; // Start rank at 1
+
+        // Display two high scores per row
         for (int i = 0; i < highScores.Count; i += 2)
         {
-            // Truncate the first name if necessary
+            // First score
             string name1 = highScores[i].Name.Length > maxNameLength
-                ? highScores[i].Name.Substring(0, maxNameLength) + "..."
+                ? highScores[i].Name.Substring(0, maxNameLength)
                 : highScores[i].Name;
 
-            // First score on the line
-            builder.Append($"<font class='{FontSizes.FontSizeS}' color='white'>{name1}: </font><font class='{FontSizes.FontSizeS}' color='gold'>{highScores[i].Score}</font>");
+            var playerColor = highScores[i].SteamId == _player.SteamID ? Color.Orange : Color.White;
 
-            // Check if there is a second score on the same line
+            builder.Append("<center>");
+
+            // Display rank in dark grey
+            builder.Append($"</center><font color='lightgreen' class='{FontSizes.FontSizeS}'>{rank}. </font><font class='{FontSizes.FontSizeS}' color='{playerColor.Name}'>{name1}: </font><font class='{FontSizes.FontSizeS}' color='gold'>{highScores[i].Score}</font>");
+            // Increment rank for next score
+            rank++;
+
+            // Second score, if it exists
             if (i + 1 < highScores.Count)
             {
-                // Truncate the second name if necessary
                 string name2 = highScores[i + 1].Name.Length > maxNameLength
-                    ? highScores[i + 1].Name.Substring(0, maxNameLength) + "..."
+                    ? highScores[i + 1].Name.Substring(0, maxNameLength)
                     : highScores[i + 1].Name;
 
-                builder.Append(" &nbsp;&nbsp; "); // Add some spacing between scores
-                builder.Append($"<font class='{FontSizes.FontSizeS}' color='white'>{name2}: </font><font class='{FontSizes.FontSizeS}' color='gold'>{highScores[i + 1].Score}</font>");
+                playerColor = highScores[i+1].SteamId == _player.SteamID ? Color.Orange : Color.White;
+
+                //Calculate padding
+                var padding = Math.Clamp(maxNameLength - name1.Length, 4, maxNameLength);
+                for (int j = 0; j < padding; j++)
+                {
+                    builder.Append("&nbsp;");
+                }
+
+                // Display rank for the second score in dark grey
+                builder.Append($"<font color='lightgreen' class='{FontSizes.FontSizeS}'>{rank}. </font><font class='{FontSizes.FontSizeS}' color='{playerColor.Name}'>{name2}: </font><font class='{FontSizes.FontSizeS}' color='gold'>{highScores[i + 1].Score}</font>&#9;");
+
+                // Increment rank for next iteration
+                rank++;
             }
 
+            builder.Append("</center>");
             builder.Append("<br>"); // New line after two pairs
         }
+
+        // Footer for retry/exit options
+        builder.Append("<center><font color='green' class='fontSize-sm'>Retry: </font><font color='orange' class='fontSize-s'>[R]</font><font color='white' class='fontSize-sm'> | </font><font color='red' class='fontSize-sm'>Exit: </font><font color='orange' class='fontSize-s'>[Tab]</font></center>");
     }
 
 

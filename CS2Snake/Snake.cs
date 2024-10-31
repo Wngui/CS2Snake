@@ -27,6 +27,9 @@ namespace CS2Snake
 
            _snakeGame = new SnakeGame();
             _snakeGame.Load(this, hotReload, _database);
+
+            //Debug
+            //Utilities.GetPlayers().ForEach(x => x.ExecuteClientCommandFromServer("css_snake"));
         }
 
         [ConsoleCommand("css_snake")]
