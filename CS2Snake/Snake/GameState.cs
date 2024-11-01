@@ -1,9 +1,7 @@
 ﻿using System.Drawing;
-using System.Numerics;
 using System.Text;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using CS2Snake.Model;
@@ -182,62 +180,40 @@ public class GameState
 
     private void AppendHighscores(StringBuilder builder)
     {
-        // Define maximum name length for alignment purposes
-        const int maxNameLength = 13;
-
-        // List high scores
+        // List top 5 high scores
         var highScores = Database.GetHighScores();
 
-        int rank = 1; // Start rank at 1
+        int maxDisplayedScores = 8; // Limit to top 5 players
+        int maxNameLength = 20;     // Maximum allowed name length
+        int rank = 1;               // Start rank at 1
 
-        // Display two high scores per row
-        for (int i = 0; i < highScores.Count; i += 2)
+        builder.Append($"<font class='{FontSizes.FontSizeS}'>ㅤ</font>");
+
+        // Loop through and display each score up to maxDisplayedScores
+        for (int i = 0; i < highScores.Count && i < maxDisplayedScores; i++)
         {
-            // First score
-            string name1 = highScores[i].Name.Length > maxNameLength
-                ? highScores[i].Name.Substring(0, maxNameLength)
-                : highScores[i].Name;
+            var player = highScores[i];
 
-            var playerColor = highScores[i].SteamId == _player.SteamID ? Color.Orange : Color.White;
+            // Trim player name if it exceeds maxNameLength
+            string playerName = player.Name.Length > maxNameLength
+                ? player.Name[..maxNameLength]
+                : player.Name;
 
-            builder.Append("<center>");
+            var playerColor = player.SteamId == _player.SteamID ? Color.Orange : Color.White;
 
-            // Display rank in dark grey
-            builder.Append($"</center><font color='lightgreen' class='{FontSizes.FontSizeS}'>{rank}. </font><font class='{FontSizes.FontSizeS}' color='{playerColor.Name}'>{name1}: </font><font class='{FontSizes.FontSizeS}' color='gold'>{highScores[i].Score}</font>");
-            // Increment rank for next score
-            rank++;
+            // Append formatted score information
+            builder.Append("<font>");
+            builder.Append($"<font color='lightgreen' class='{FontSizes.FontSizeS}'>{rank}. </font>");
+            builder.Append($"<font class='{FontSizes.FontSizeS}' color='{playerColor.Name}'>{playerName}: </font>");
+            builder.Append($"<font class='{FontSizes.FontSizeS}' color='gold'>{player.Score}</font>");
+            builder.Append("</font><br>"); // New line after each player
 
-            // Second score, if it exists
-            if (i + 1 < highScores.Count)
-            {
-                string name2 = highScores[i + 1].Name.Length > maxNameLength
-                    ? highScores[i + 1].Name.Substring(0, maxNameLength)
-                    : highScores[i + 1].Name;
-
-                playerColor = highScores[i+1].SteamId == _player.SteamID ? Color.Orange : Color.White;
-
-                //Calculate padding
-                var padding = Math.Clamp(maxNameLength - name1.Length, 4, maxNameLength);
-                for (int j = 0; j < padding; j++)
-                {
-                    builder.Append("&nbsp;");
-                }
-
-                // Display rank for the second score in dark grey
-                builder.Append($"<font color='lightgreen' class='{FontSizes.FontSizeS}'>{rank}. </font><font class='{FontSizes.FontSizeS}' color='{playerColor.Name}'>{name2}: </font><font class='{FontSizes.FontSizeS}' color='gold'>{highScores[i + 1].Score}</font>&#9;");
-
-                // Increment rank for next iteration
-                rank++;
-            }
-
-            builder.Append("</center>");
-            builder.Append("<br>"); // New line after two pairs
+            rank++; // Increment rank for the next player
         }
 
         // Footer for retry/exit options
         builder.Append("<center><font color='green' class='fontSize-sm'>Retry: </font><font color='orange' class='fontSize-s'>[R]</font><font color='white' class='fontSize-sm'> | </font><font color='red' class='fontSize-sm'>Exit: </font><font color='orange' class='fontSize-s'>[Tab]</font></center>");
     }
-
 
     private void PrintScoreToChat()
     {

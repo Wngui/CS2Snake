@@ -1,5 +1,4 @@
-﻿using CounterStrikeSharp.API.Modules.Entities;
-using CS2Snake.Model;
+﻿using CS2Snake.Model;
 using Dapper;
 using Microsoft.Data.Sqlite;
 
@@ -25,15 +24,13 @@ namespace CS2Snake
             var placeholderHighscores = new List<(ulong SteamId, string Name, int Score)>
             {
                 (1, "NoobMaster69", 400),
-                (7, "ThePizzaPope", 300),
-                (4, "HeadshotHunter", 150),
-                (2, "PotatoAimPro", 120),
-                (8, "BananaBlaster", 100),
-                (3, "CampingIsLife", 75),
-                (5, "LaggingLegend", 50),
-                (6, "BaconBandit", 25),
-                (9, "007", 7),
-                (10, "EpicFailGuy", 0)
+                (2, "ThePizzaPope", 300),
+                (3, "HeadshotHunter", 150),
+                (4, "PotatoAimPro", 120),
+                (5, "BananaBlaster", 100),
+                (6, "CampingIsLife", 75),
+                (7, "LaggingLegend", 50),
+                (8, "EpicFailGuy", 0),
             };
 
             foreach (var (steamId, name, score) in placeholderHighscores)
