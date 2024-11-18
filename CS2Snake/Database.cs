@@ -8,7 +8,7 @@ namespace CS2Snake
     {
         private SqliteConnection _connection;
 
-        public void Initialize(string directory)
+        public void Initialize(string directory, bool includePlaceholders = true)
         {
             _connection =
                 new SqliteConnection(
@@ -21,17 +21,44 @@ namespace CS2Snake
                     `name` VARCHAR(64),
 	                PRIMARY KEY (`steamid`));");
 
-            var placeholderHighscores = new List<(ulong SteamId, string Name, int Score)>
+            InitMetadata();
+
+            if (includePlaceholders)
             {
-                (1, "NoobMaster69", 400),
-                (2, "ThePizzaPope", 300),
-                (3, "HeadshotHunter", 150),
-                (4, "PotatoAimPro", 120),
-                (5, "BananaBlaster", 100),
-                (6, "CampingIsLife", 75),
-                (7, "LaggingLegend", 50),
-                (8, "EpicFailGuy", 0),
-            };
+                InsertPlaceholders();
+            }
+        }
+
+        private void InitMetadata()
+        {
+            // Create the 'meta' table if it doesn't exist
+            _connection.Execute(@"
+                CREATE TABLE IF NOT EXISTS `meta` (
+                    `lastReset` DATETIME DEFAULT CURRENT_TIMESTAMP
+                );");
+
+            // Insert a row into the 'meta' table if it does not already exist
+            var rowExists = _connection.ExecuteScalar<int>(@"SELECT COUNT(1) FROM `meta`;");
+
+            if (rowExists == 0)
+            {
+                _connection.Execute(@"INSERT INTO `meta` (`lastReset`) VALUES (CURRENT_TIMESTAMP);");
+            }
+        }
+
+        private void InsertPlaceholders()
+        {
+            var placeholderHighscores = new List<(ulong SteamId, string Name, int Score)>
+                {
+                    (1, "NoobMaster69", 400),
+                    (2, "ThePizzaPope", 300),
+                    (3, "HeadshotHunter", 150),
+                    (4, "PotatoAimPro", 120),
+                    (5, "BananaBlaster", 100),
+                    (6, "CampingIsLife", 75),
+                    (7, "LaggingLegend", 50),
+                    (8, "EpicFailGuy", 0),
+                };
 
             foreach (var (steamId, name, score) in placeholderHighscores)
             {
@@ -49,6 +76,14 @@ namespace CS2Snake
             return highscores.ToList();
         }
 
+        public HighScore GetHighScore(ulong steamId)
+        {
+            var highscore = _connection.QueryFirstOrDefault<HighScore>(
+                "SELECT * FROM `highscores` WHERE steamId = @SteamId ORDER BY score DESC LIMIT 1;",
+                new { SteamId = steamId });
+            return highscore;
+        }
+
         public void SaveHighScore(HighScore highscore)
         {
             _connection.Execute(@"
@@ -58,5 +93,21 @@ namespace CS2Snake
             WHERE excluded.score > score;",
                 new { highscore.SteamId, highscore.Score, highscore.Name });
         }
+
+        public void ResetHighScores(bool includePlaceholders = true)
+        {
+            _connection.Execute("DELETE FROM `highscores`;");
+
+            _connection.Execute(@"UPDATE `meta` SET `lastReset` = CURRENT_TIMESTAMP;");
+
+            if (includePlaceholders) InsertPlaceholders();
+        }
+
+        public DateTime? GetLastSnakeReset()
+        {
+            var result = _connection.ExecuteScalar<DateTime?>(@"SELECT `lastReset` FROM `meta` LIMIT 1;");
+            return result;
+        }
+
     }
 }

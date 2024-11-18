@@ -7,9 +7,12 @@ public class SnakeGame
 {
 
     public static readonly Dictionary<int, GameState> Players = [];
+    public static int GameSpeed = 100;
 
-    public void Load(BasePlugin plugin, bool hotReload, Database database)
+    public void Load(BasePlugin plugin, bool hotReload, Database database, Config config)
     {
+        GameSpeed = config.GameSpeed;
+
         plugin.RegisterEventHandler<EventPlayerActivate>((@event, info) =>
         {
             if (@event.Userid != null)
@@ -107,5 +110,12 @@ public class SnakeGame
     {
         if (player == null) return;
         Players[player.Slot].StartGame();
+    }
+
+    public static void ShowHighscores(CCSPlayerController? player)
+    {
+        if (player == null) return;
+        Players[player.Slot].StartGame();
+        Players[player.Slot].ShowHighscores();
     }
 }

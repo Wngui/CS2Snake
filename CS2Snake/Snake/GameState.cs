@@ -2,6 +2,7 @@
 using System.Text;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using CS2Snake.Model;
@@ -23,7 +24,7 @@ public class GameState
     private readonly int gridHeight = 6;
     private Random random;
     private bool gameOver = false;
-    private bool showingGameOver = false;
+    private bool showingHighscores = false;
     private int _score;
 
 
@@ -50,7 +51,7 @@ public class GameState
         direction = (-1, 0); // Start moving left
         food = GenerateFoodPosition();
         gameOver = false;
-        showingGameOver = false;
+        showingHighscores = false;
         _score = 0; // Reset score
     }
 
@@ -121,7 +122,7 @@ public class GameState
     // This function updates the game state and renders the grid
     public void UpdateCenterHtml()
     {
-        if (showingGameOver) return;
+        if (showingHighscores) return;
         if (gameOver)
         {
             ShowGameOver();
@@ -160,59 +161,77 @@ public class GameState
 
     private void ShowGameOver()
     {
-        showingGameOver = true;
-
         if (_player.IsValid)
         {
             //Save Highscore
             Database.SaveHighScore(new HighScore() { SteamId = _player.SteamID, Score = _score, Name = _player.PlayerName });
         }
 
-        StringBuilder builder = new();
         //List player score
-        builder.Append($"<font color='red'>Game Over</font><br><font class='{FontSizes.FontSizeSm}' color='white'>Your Score: </font><font class='{FontSizes.FontSizeSm}' color='gold'>{_score}</font>");
-        builder.Append("<br>"); 
-        AppendHighscores(builder);
+        ShowHighscores(isGameover: true);
 
-        CenterHtml = builder.ToString();
         PrintScoreToChat();
     }
 
-    private void AppendHighscores(StringBuilder builder)
+    public void ShowHighscores(bool isGameover = false)
     {
-        // List top 5 high scores
+        showingHighscores = true;
+
+        StringBuilder builder = new();
+        if (isGameover)
+        {
+            builder.Append($"<font color='red'>Game Over</font><br><font class='{FontSizes.FontSizeSm}' color='white'>Your Score: </font><font class='{FontSizes.FontSizeSm}' color='gold'>{_score}</font>");
+            builder.Append("<br>");
+        }
+        else
+        {
+            var highscore = Database.GetHighScore(_player.SteamID);
+            builder.Append($"<font color='red'>Highscores</font><br><font class='{FontSizes.FontSizeSm}' color='white'>Your Best Score: </font><font class='{FontSizes.FontSizeSm}' color='gold'>{highscore?.Score ?? 0}</font>");
+            builder.Append("<br>");
+        }
+
         var highScores = Database.GetHighScores();
 
-        int maxDisplayedScores = 8; // Limit to top 5 players
+        int maxDisplayedScores = 8;
         int maxNameLength = 20;     // Maximum allowed name length
         int rank = 1;               // Start rank at 1
 
         builder.Append($"<font class='{FontSizes.FontSizeS}'>ㅤ</font>");
 
-        // Loop through and display each score up to maxDisplayedScores
-        for (int i = 0; i < highScores.Count && i < maxDisplayedScores; i++)
+        if (highScores.Any())
         {
-            var player = highScores[i];
+            // Loop through and display each score up to maxDisplayedScores
+            for (int i = 0; i < highScores.Count && i < maxDisplayedScores; i++)
+            {
+                var player = highScores[i];
 
-            // Trim player name if it exceeds maxNameLength
-            string playerName = player.Name.Length > maxNameLength
-                ? player.Name[..maxNameLength]
-                : player.Name;
+                // Trim player name if it exceeds maxNameLength
+                string playerName = player.Name.Length > maxNameLength
+                    ? player.Name[..maxNameLength]
+                    : player.Name;
 
-            var playerColor = player.SteamId == _player.SteamID ? Color.Orange : Color.White;
+                var playerColor = player.SteamId == _player.SteamID ? Color.Orange : Color.White;
 
-            // Append formatted score information
+                // Append formatted score information
+                builder.Append("<font>");
+                builder.Append($"<font color='lightgreen' class='{FontSizes.FontSizeS}'>{rank}. </font>");
+                builder.Append($"<font class='{FontSizes.FontSizeS}' color='{playerColor.Name}'>{playerName}: </font>");
+                builder.Append($"<font class='{FontSizes.FontSizeS}' color='gold'>{player.Score}</font>");
+                builder.Append("</font><br>"); // New line after each player
+
+                rank++; // Increment rank for the next player
+            }
+        }
+        else
+        {
             builder.Append("<font>");
-            builder.Append($"<font color='lightgreen' class='{FontSizes.FontSizeS}'>{rank}. </font>");
-            builder.Append($"<font class='{FontSizes.FontSizeS}' color='{playerColor.Name}'>{playerName}: </font>");
-            builder.Append($"<font class='{FontSizes.FontSizeS}' color='gold'>{player.Score}</font>");
+            builder.Append($"<font color='white' class='{FontSizes.FontSizeS}'>No highscores</font>");
             builder.Append("</font><br>"); // New line after each player
-
-            rank++; // Increment rank for the next player
         }
 
         // Footer for retry/exit options
         builder.Append("<center><font color='green' class='fontSize-sm'>Retry: </font><font color='orange' class='fontSize-s'>[R]</font><font color='white' class='fontSize-sm'> | </font><font color='red' class='fontSize-sm'>Exit: </font><font color='orange' class='fontSize-s'>[Tab]</font></center>");
+        CenterHtml = builder.ToString();
     }
 
     private void PrintScoreToChat()
