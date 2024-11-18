@@ -10,6 +10,6 @@ namespace CS2Snake
         [JsonPropertyName("ShowHighscorePlaceholders")] public bool ShowHighscorePlaceholders { get; set; } = true;
         [JsonPropertyName("ResetScoresWeekly")] public bool ResetScoresWeekly { get; set; } = false;
         [JsonPropertyName("ResetScoresMonthly")] public bool ResetScoresMonthly { get; set; } = false;
-        [JsonPropertyName("GameSpeed")] public int GameSpeed { get; set; } = 100;
+        [JsonPropertyName("GameSpeed")] public int GameSpeed { get; set; } = 91;
     }
 }

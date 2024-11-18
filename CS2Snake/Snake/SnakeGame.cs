@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using Microsoft.VisualBasic;
 
 namespace CS2Snake.Menu;
 
@@ -7,11 +8,10 @@ public class SnakeGame
 {
 
     public static readonly Dictionary<int, GameState> Players = [];
-    public static int GameSpeed = 100;
 
     public void Load(BasePlugin plugin, bool hotReload, Database database, Config config)
     {
-        GameSpeed = config.GameSpeed;
+        SetGameSpeed(config.GameSpeed);
 
         plugin.RegisterEventHandler<EventPlayerActivate>((@event, info) =>
         {
@@ -45,7 +45,19 @@ public class SnakeGame
             }
     }
 
-    private static readonly TimeSpan UpdateInterval = TimeSpan.FromMilliseconds(100); // delay between updates
+    private static void SetGameSpeed(int desiredGameSpeed)
+    {
+        desiredGameSpeed = Math.Clamp(desiredGameSpeed, 1, 100);
+
+        const int minTickRate = 60;  // Fastest
+        const int maxTickRate = 400; // Slowest
+
+        // Calculate the inverted tick rate
+        var gameSpeed = maxTickRate - (desiredGameSpeed - 1) * (maxTickRate - minTickRate) / 99;
+        UpdateInterval = TimeSpan.FromMilliseconds(gameSpeed);
+    }
+
+    private static TimeSpan UpdateInterval = TimeSpan.FromMilliseconds(100); // delay between updates
     private static DateTime lastUpdate = DateTime.Now;
 
     public static void OnTick()
