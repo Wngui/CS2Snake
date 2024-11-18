@@ -18,3 +18,20 @@
 
 ## Commands
 ```!snake``` - Start the game
+
+```!topsnake``` - Show highscores
+
+```!resetsnake``` - [Admin only] Reset highscores
+
+```!nextsnakereset``` - Show next highscores reset
+## Configuration example
+Config path: *counterstrikesharp\configs\plugins\CS2Snake\CS2Snake.json*
+```jsonc
+{
+  "ConfigVersion": 1,
+  "ShowHighscorePlaceholders": true, // Fill highscores with random names
+  "ResetScoresWeekly": false, // Reset highscores every week
+  "ResetScoresMonthly": true, // Reset highscores every month
+  "GameSpeed": 91 // 1-100
+}
+```
