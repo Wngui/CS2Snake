@@ -103,7 +103,7 @@ namespace CS2Snake
             if (includePlaceholders) InsertPlaceholders();
         }
 
-        public DateTime? GetLastSnakeReset()
+        public DateTime? GetLastSnakeResetUTC()
         {
             var result = _connection.ExecuteScalar<DateTime?>(@"SELECT `lastReset` FROM `meta` LIMIT 1;");
             return result;

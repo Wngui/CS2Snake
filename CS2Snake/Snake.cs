@@ -1,10 +1,13 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using CS2Snake.Menu;
+using System.Numerics;
 using static System.Formats.Asn1.AsnWriter;
 
 namespace CS2Snake
@@ -22,6 +25,11 @@ namespace CS2Snake
         public static Snake? Instance { get; set; }
         public Config Config { get; set; } = null!;
 
+        public void OnConfigParsed(Config config)
+        {
+            Config = config;
+        }
+
         public override void Load(bool hotReload)
         {
             Instance ??= this;
@@ -35,16 +43,11 @@ namespace CS2Snake
 
             if (Config.ResetScoresWeekly || Config.ResetScoresMonthly)
             {
-                Instance.AddTimer(600, ShouldResetScore);
+                Instance.AddTimer(600, ShouldResetScore, TimerFlags.REPEAT);
             }
 
             //Debug
             //Utilities.GetPlayers().ForEach(x => x.ExecuteClientCommandFromServer("css_snake"));
-        }
-
-        private void ShouldResetScore()
-        {
-            throw new NotImplementedException();
         }
 
         [ConsoleCommand("css_snake")]
@@ -79,7 +82,7 @@ namespace CS2Snake
         {
             if (!player.IsValid) return;
 
-            var lastSnakeReset = _database.GetLastSnakeReset() ?? DateTime.Now;
+            var lastSnakeReset = _database.GetLastSnakeResetUTC() ?? DateTime.UtcNow;
 
             DateTime nextReset;
             if (Config.ResetScoresMonthly)
@@ -96,13 +99,37 @@ namespace CS2Snake
                 return;
             }
 
-            var timeRemaining = nextReset - DateTime.Now;
-            player.PrintToChat($" [{ChatColors.Green}Snake{ChatColors.Default}] {ChatColors.LightBlue}Next reset in: {ChatColors.Default}{ChatColors.Gold}{timeRemaining.TotalDays} days, {timeRemaining.Hours} hours, {timeRemaining.Minutes} minutes");
+            var timeRemaining = nextReset - DateTime.UtcNow;
+            player.PrintToChat($" [{ChatColors.Green}Snake{ChatColors.Default}] {ChatColors.LightBlue}Highscores reset in: {ChatColors.Gold}{(int)timeRemaining.TotalDays}{ChatColors.LightBlue} days, {ChatColors.Gold}{timeRemaining.Hours}{ChatColors.LightBlue} hours, {ChatColors.Gold}{timeRemaining.Minutes}{ChatColors.LightBlue} minutes.");
         }
 
-        public void OnConfigParsed(Config config)
+        private void ShouldResetScore()
         {
-            Config = config;
+            var lastSnakeReset = _database.GetLastSnakeResetUTC() ?? DateTime.UtcNow;
+
+            DateTime nextReset = lastSnakeReset;
+            if (Config.ResetScoresMonthly)
+            {
+                nextReset = lastSnakeReset.AddMonths(1);
+            }
+            else if (Config.ResetScoresWeekly)
+            {
+                nextReset = lastSnakeReset.AddDays(7);
+            }
+
+            var timeRemaining = nextReset - DateTime.UtcNow;
+
+            if (timeRemaining <= TimeSpan.Zero)
+            {
+                _database.ResetHighScores(Config.ShowHighscorePlaceholders);
+
+                foreach (var player in Utilities.GetPlayers())
+                {
+                    if (!player.IsValid || player.IsBot) continue;
+                    player.PrintToChat($" [{ChatColors.Green}Snake{ChatColors.Default}] {ChatColors.Red}Highscores have been automatically reset!");
+                    player.ExecuteClientCommandFromServer("css_snakeresetnext");
+                }
+            }
         }
     }
 }
